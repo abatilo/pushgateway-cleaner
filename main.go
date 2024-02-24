@@ -1,23 +1,17 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
-	"strings"
 	"time"
-
-	"github.com/prometheus/client_golang/prometheus/push"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 )
 
 func main() {
-	viper.SetEnvPrefix("PGC")
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	viper.AutomaticEnv()
-
 	// Set up logging
 	level := new(slog.LevelVar)
 	level.Set(slog.LevelInfo)
@@ -26,39 +20,31 @@ func main() {
 	})
 	log := slog.New(handler)
 
-	pflag.BoolP(FlagVerbose, "v", FlagVerboseDefault, "Set logging verbosity level to debug")
-	pflag.Duration(
+	verbose := flag.Bool(FlagVerbose, FlagVerboseDefault, "Set logging verbosity level to debug")
+	ttl := flag.Duration(
 		FlagTTL,
 		FlagTTLDefault,
 		"How old metrics are allowed to be before being deleted",
 	)
-	pflag.Duration(FlagSyncPeriod, FlagSyncPeriodDefault, "How often to check for old metrics")
-	pflag.String(FlagPushgatewayURL, FlagPushgatewayURLDefault, "Pushgateway URL")
-	pflag.BoolP(FlagHelp, "h", FlagHelpDefault, "Show help")
-	pflag.Parse()
-	_ = viper.BindPFlags(pflag.CommandLine)
+	syncPeriod := flag.Duration(
+		FlagSyncPeriod,
+		FlagSyncPeriodDefault,
+		"How often to check for old metrics",
+	)
+	pushgatewayURL := flag.String(FlagPushgatewayURL, FlagPushgatewayURLDefault, "Pushgateway URL")
+	flag.Parse()
 
-	if viper.GetBool(FlagHelp) {
-		pflag.Usage()
-		return
-	}
-
-	verbose := viper.GetBool(FlagVerbose)
-	ttl := viper.GetDuration(FlagTTL)
-	syncPeriod := viper.GetDuration(FlagSyncPeriod)
-	pushgatewayURL := viper.GetString(FlagPushgatewayURL)
-
-	if verbose {
+	if *verbose {
 		level.Set(slog.LevelDebug)
 	}
 
-	ticker := time.NewTicker(syncPeriod)
+	ticker := time.NewTicker(*syncPeriod)
 
 	log.Debug("Startup config",
-		FlagVerbose, verbose,
-		FlagTTL, ttl,
-		FlagSyncPeriod, syncPeriod,
-		FlagPushgatewayURL, pushgatewayURL,
+		FlagVerbose, *verbose,
+		FlagTTL, *ttl,
+		FlagSyncPeriod, *syncPeriod,
+		FlagPushgatewayURL, *pushgatewayURL,
 	)
 
 	httpClient := &http.Client{
@@ -75,7 +61,7 @@ func main() {
 
 	for range ticker.C {
 		log.Debug("Fetching metrics")
-		pushTimeMetric, err := fetchPushTimeMetric(httpClient, pushgatewayURL)
+		pushTimeMetric, err := fetchPushTimeMetric(httpClient, *pushgatewayURL)
 		if err != nil {
 			log.Error("Error fetching or parsing metrics:", err)
 			return
@@ -90,21 +76,26 @@ func main() {
 			)
 			metricLog.Debug("Found metric")
 
-			if time.Since(pushTime) > ttl {
+			if time.Since(pushTime) > *ttl {
 				metricLog.Debug(
 					"Deleting metric since it's older than the TTL",
 				)
-				pushClient := push.New(pushgatewayURL, jobLabel)
-				err := pushClient.
-					Grouping("instance", instanceLabel).
-					Client(httpClient).
-					Delete()
+				url, _ := url.Parse(fmt.Sprintf(
+					"%s/metrics/job/%s/instance/%s",
+					*pushgatewayURL,
+					jobLabel,
+					instanceLabel,
+				))
+				_, err := httpClient.Do(&http.Request{
+					Method: http.MethodDelete,
+					URL:    url,
+				})
 				if err != nil {
 					metricLog.Error("Error deleting metric:", err)
 				}
 			} else {
 				metricLog.With(
-					"time_until_delete", ttl-time.Since(pushTime),
+					"time_until_delete", *ttl-time.Since(pushTime),
 				).Debug("Not deleting metric")
 			}
 		}

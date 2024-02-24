@@ -19,11 +19,14 @@ These are the available flags for `pushgateway-cleaner`
 ```
 ⇒ ./pushgateway-cleaner --help
 Usage of ./pushgateway-cleaner:
-  -h, --help                     Show help
-      --pushgateway-url string   Pushgateway URL (default "http://localhost:9091")
-      --sync-period duration     How often to check for old metrics (default 3m0s)
-      --ttl duration             How old metrics are allowed to be before being deleted (default 10m0s)
-  -v, --verbose                  Set logging verbosity level to debug
+  -pushgateway-url string
+        Pushgateway URL (default "http://localhost:9091")
+  -sync-period duration
+        How often to check for old metrics (default 3m0s)
+  -ttl duration
+        How old metrics are allowed to be before being deleted (default 10m0s)
+  -verbose
+        Set logging verbosity level to debug
 ```
 
 ## Usage
