@@ -12,7 +12,6 @@ import (
 )
 
 func main() {
-	// Set up logging
 	level := new(slog.LevelVar)
 	level.Set(slog.LevelInfo)
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
