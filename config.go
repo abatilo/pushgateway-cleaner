@@ -11,7 +11,4 @@ const (
 	FlagSyncPeriodDefault     = 3 * time.Minute
 	FlagPushgatewayURL        = "pushgateway-url"
 	FlagPushgatewayURLDefault = "http://localhost:9091"
-
-	FlagHelp        = "help"
-	FlagHelpDefault = false
 )
