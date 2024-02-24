@@ -8,7 +8,7 @@ COPY *.go ./
 ARG TARGETOS TARGETARCH
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-w -s" -o /go/bin/pushgateway-cleaner .
 
-FROM gcr.io/distroless/static-debian11:nonroot
+FROM scratch
 COPY --from=builder /go/bin/pushgateway-cleaner /usr/local/bin/pushgateway-cleaner
 
 ENTRYPOINT ["pushgateway-cleaner"]
