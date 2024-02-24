@@ -73,11 +73,11 @@ func main() {
 				"job", jobLabel,
 				"push_time", pushTime,
 			)
-			metricLog.Debug("Found metric")
+			metricLog.Debug("Found metric group")
 
 			if time.Since(pushTime) > *ttl {
 				metricLog.Debug(
-					"Deleting metric since it's older than the TTL",
+					"Deleting metric group since it's older than the TTL",
 				)
 				url, _ := url.Parse(fmt.Sprintf(
 					"%s/metrics/job/%s/instance/%s",
@@ -90,12 +90,12 @@ func main() {
 					URL:    url,
 				})
 				if err != nil {
-					metricLog.Error("Error deleting metric:", err)
+					metricLog.Error("Error deleting metric group:", err)
 				}
 			} else {
 				metricLog.With(
 					"time_until_delete", *ttl-time.Since(pushTime),
-				).Debug("Not deleting metric")
+				).Debug("Not deleting metric group")
 			}
 		}
 		log.Debug("Done fetching metrics")
