@@ -62,7 +62,7 @@ func main() {
 		log.Debug("Fetching metrics")
 		pushTimeMetric, err := fetchPushTimeMetric(httpClient, *pushgatewayURL)
 		if err != nil {
-			log.Error("Error fetching or parsing metrics:", err)
+			log.Error("Error fetching or parsing metrics", "error", err)
 			return
 		}
 
@@ -90,7 +90,7 @@ func main() {
 					URL:    url,
 				})
 				if err != nil {
-					metricLog.Error("Error deleting metric group:", err)
+					metricLog.Error("Error deleting metric group", "error", err)
 				}
 			} else {
 				metricLog.With(
