@@ -63,7 +63,7 @@ func main() {
 		pushTimeMetric, err := fetchPushTimeMetric(httpClient, *pushgatewayURL)
 		if err != nil {
 			log.Error("Error fetching or parsing metrics", "error", err)
-			return
+			continue
 		}
 
 		for _, metric := range pushTimeMetric.GetMetric() {
