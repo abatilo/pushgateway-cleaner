@@ -26,7 +26,7 @@ func fetchPushTimeMetric(
 
 	pushTimeMetrics, found := metricFamilies["push_time_seconds"]
 	if !found {
-		return nil, fmt.Errorf("push_time_seconds not found in metrics")
+		return &dto.MetricFamily{}, nil
 	}
 
 	return pushTimeMetrics, nil

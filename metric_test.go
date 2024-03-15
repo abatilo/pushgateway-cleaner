@@ -26,3 +26,19 @@ push_time_seconds{instance="some_instance",job="some_job"} 1.7088061457877028e+0
 		t.Errorf("expected no error, got %v", err)
 	}
 }
+
+func Test_FetchPushTimeMetricMissing(t *testing.T) {
+	mockHTTPClient := &MockHTTPClient{
+		GetFunc: func(url string) (*http.Response, error) {
+			mockResponse := ``
+			return &http.Response{
+				Body: io.NopCloser(strings.NewReader(mockResponse)),
+			}, nil
+		},
+	}
+
+	_, err := fetchPushTimeMetric(mockHTTPClient, "http://localhost:9091")
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+}
